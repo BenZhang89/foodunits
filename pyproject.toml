@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "foodunits"
+version = "0.1.0"
+description = "Validate or convert food units"
+authors = ["Ben Zhang"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
