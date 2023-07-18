@@ -1,12 +1,16 @@
 """Utils."""
 import re
+import logging
 from typing import Callable, Any, Tuple, List
 from inspect import getfullargspec
 from itertools import chain
 from functools import wraps
 import pycountry
+import fractions
 from pattern.text.en import singularize
+from fuzzywuzzy import fuzz
 from foodunits.exceptions import ConversionFailure, ValidationFailure
+
 
 def _func_args_as_dict(func: Callable[..., Any], *args: Any, **kwargs: Any):
     """Return function's positional and key-value arguments as an ordered dictionary."""
@@ -69,24 +73,28 @@ def validate_numeric_string(input_string: str) -> Tuple[bool, float]:
         try:
             return True, float(input_string)  # Try converting to float
         except ValueError:
-            # If conversion to integer fails, check if it is a valid numeric word
-            words = input_string.lower().replace('-', ' ').split()
-            value = 0
-            temp_value = 0
-            for word in words:
-                if word not in numeric_words:
-                    try:
-                        temp_value += int(word)
-                    except ValueError:
-                        return False, 0
-                else:
-                    if word in ["hundred", "thousand", "million", "billion"]:
-                        value += temp_value * numeric_words[word]
-                        temp_value = 0
+            try:
+                # Convert the fraction string to float using the fractions module
+                return True, float(sum(fractions.Fraction(s) for s in input_string.split()))
+            except ValueError:
+                # If conversion to integer fails, check if it is a valid numeric word
+                words = input_string.lower().replace('-', ' ').split()
+                value = 0
+                temp_value = 0
+                for word in words:
+                    if word not in numeric_words:
+                        try:
+                            temp_value += int(word)
+                        except ValueError:
+                            return False, 0
                     else:
-                        temp_value += numeric_words[word]
-            value += temp_value
-            return True, value
+                        if word in ["hundred", "thousand", "million", "billion"]:
+                            value += temp_value * numeric_words[word]
+                            temp_value = 0
+                        else:
+                            temp_value += numeric_words[word]
+                value += temp_value
+                return True, value
 
 def split_quantity_unit(value: str) -> Tuple[str, str]:
     """Split a quantity + unit type string into quantity and unit.
@@ -123,18 +131,27 @@ def split_quantity_unit(value: str) -> Tuple[str, str]:
     else:
         return None, result[-1]
 
-def preprocess(value: str) -> str:
+def preprocess(input_string: str) -> str:
     """Preprocess a string.
     The preprocessing includes converting characters to lowercase,
     keeping only alphabets, numbers, ".", and single space,
     converting multiple spaces to one space,
     and stripping spaces from both ends.
     Args:
-        value: The string to preprocess.
+        input_string: The string to preprocess.
     Returns:
         The preprocessed string.
     """
-    return re.sub(r"\s+", " ", re.sub(r'[^A-Za-z\s\d\.]+', '', value)).strip()
+    # Remove punctuation using the pattern, except between digits
+    processed_value = re.sub(r'(?<!\d)[^\w\s](?!\d)', '', input_string)
+    # Remove spaces between float like digits, e.g. 1. 1, 1, 1
+    processed_value = re.sub(r'(?<=\d[.,:%])\s(?=\d)', '', processed_value)
+    processed_value = re.sub(r"\s+", " ", processed_value).strip()
+
+    return processed_value
+
+def single(input_string):
+    return singularize(re.sub(r"\s+", " ", re.sub(r'[^A-Za-z\s\d]+', '', input_string)).strip())
 
 def find_country(country: str):
     """Find the country by name or code.
@@ -144,9 +161,15 @@ def find_country(country: str):
         The country code if found, otherwise "not founded".
     """
     try:
-        return pycountry.countries.search_fuzzy(country)[0].alpha_2
+        return pycountry.countries.search_fuzzy(country)[0].alpha_2.lower()
     except Exception as exc:
-        raise ConversionFailure(f"Country {country} is not found") from exc
+        logging.warning(
+            f"""
+            Country code not found. Details:{exc}.
+            Return {country}.
+            """
+        )
+        return country
 
 def find_ingredient(ingredient: str):
     """Find the ingredient by name or code.
@@ -168,7 +191,60 @@ def process_saved_units(units: List = None):
         A set of processed units.
     """
     # Extract and process all the saved units
-    extracted_unit = [(unit['name'], unit['symbol']) for sub in units for unit in sub['units']]
+    extracted_unit = [(unit['name'], unit['si']) for sub in units for unit in sub['units']]
     extracted_unit = [item for sublist in extracted_unit for item in sublist]
-    units_processed = set([singularize(unit.lower().replace(" ", "")) for unit in extracted_unit])
+    units_processed = set([singularize(unit.lower().replace(" ", "")) for unit in extracted_unit if unit])
     return units_processed
+
+def get_ingredient_density(ingredient, ingredient_dict:dict=None, threshold:int=85):
+    """
+    Retrieves the density value for a given ingredient by performing token-based matching using fuzzywuzzy.
+
+    Args:
+        ingredient (str): The ingredient to search for.
+        ingredient_dict (dict, optional): Dictionary of ingredient densities. The keys represent the ingredients, and the values represent their respective densities. Defaults to None.
+        threshold (int, optional): The minimum score required to consider a match valid. Defaults to 95.
+
+    Returns:
+        float or None: The density value for the closest matching ingredient. Returns None if no close match is found.
+
+    Example:
+        ingredient_dict = {
+            "sugar": 1.59,
+            "salt": 2.16,
+            "flour": 0.81,
+            "butter": 0.95,
+        }
+
+        ingredient = "sugr"
+        density = get_ingredient_density(ingredient, ingredient_dict, threshold=90)
+        print(density)  # Output: 1.59
+    """
+
+    if not ingredient_dict:
+        ingredient_dict = {}
+
+    best_match = None
+    best_score = 0
+
+    for key in ingredient_dict:
+        score = fuzz.token_sort_ratio(ingredient, key)
+        if score == 100:
+            best_match = key
+            best_score = score
+            break
+        if score > best_score:
+            best_score = score
+            best_match = key
+
+    if best_score <= threshold:
+        return None
+    else:
+        print(best_match, ":", best_score)
+        logging.info(
+            f"""
+            Find key-value pair {best_match}-{ingredient_dict[best_match]} for input ingredient {ingredient}.
+            Double check the matching result.
+            """
+        )
+        return ingredient_dict[best_match]

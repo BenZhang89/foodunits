@@ -1,7 +1,7 @@
 """Test food unit validator"""
 # -*- coding: utf-8 -*-
 import pytest
-from validators import units_validator
+from foodunits import units_validator
 from foodunits.exceptions import ValidationFailure
 
 @pytest.mark.parametrize(

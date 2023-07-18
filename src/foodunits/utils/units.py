@@ -29,7 +29,7 @@ class Dictionary():
         'qt': 32,
         'pt': 16,
         'gi': 4,
-        'floz': 1
+        'fl oz': 1
     }
     __imperial_mass_dict = {
         't': 2240,
@@ -42,7 +42,7 @@ class Dictionary():
         'dr': .00390625,
         'gr': .00014285714
     }
-
+    # cup to liter
     __cup_by_country_dict = {
         'metric': 0.25,
         'international': 0.25,
@@ -57,6 +57,7 @@ class Dictionary():
         'ru': 0.246,
     } # to be expend
 
+    # teaspoon to liter
     __teaspoon_by_country_dict = {
         'metric': 0.005,
         'international': 0.005,
@@ -65,12 +66,15 @@ class Dictionary():
         'imperial': 0.005919,
     } # to be expend
 
+    # tablespoon to liter
     __tablespoon_by_country_dict = {
-        'metric': 0.005,
-        'international': 0.005,
-        'other': 0.005,
-        'us': 0.00492892,
-        'imperial': 0.005919,
+        'metric': 0.015,
+        'international': 0.0147868,
+        'au': 0.02,
+        'ca': 0.015,
+        'uk': 0.015,
+        'us': 0.0147868,
+        'imperial': 0.0177582,
     } # to be expend
 
     # add custom conversion rate
@@ -127,6 +131,7 @@ class Dictionary():
         "soy milk": 1.02,
         "whipping cream": 1.011,
         "whole milk": 1.03,
+        "milk": 1.03,
         "almonds": 0.595,  # nuts and seeds
         "cashews": 0.585,
         "chia seeds": 0.555,

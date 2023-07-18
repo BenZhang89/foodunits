@@ -189,6 +189,17 @@ optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
+name = "fuzzywuzzy"
+version = "0.18.0"
+description = "Fuzzy string matching in python"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.extras]
+speedup = ["python-levenshtein (>=0.12)"]
+
+[[package]]
 name = "idna"
 version = "3.4"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -663,7 +674,7 @@ test = ["zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "a4a29bb00b77971c2e4a12a57670909d610335bbda6eae06c90c2e2884135cc1"
+content-hash = "198a2d1ce4f05f0bb6ee4ccf221689df0364fb773c567fd8125b4012b2596c58"
 
 [metadata.files]
 annotated-types = []
@@ -682,6 +693,7 @@ cryptography = []
 exceptiongroup = []
 feedparser = []
 future = []
+fuzzywuzzy = []
 idna = []
 inflect = []
 iniconfig = []
