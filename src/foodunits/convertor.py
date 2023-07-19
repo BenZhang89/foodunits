@@ -127,8 +127,6 @@ def units_convertor(
     Returns:
         Dict: Dictionary of converted value and unit
     """
-    # import ipdb
-    # ipdb.set_trace()
     # Convert string input to value or value + unit
     if isinstance(value, str):
         cleaned_value = preprocess(value)
@@ -155,11 +153,9 @@ def units_convertor(
         )
 
     # Process unit; keep only alphabets and one space
-    from_unit = singularize(re.sub(r"\s+", " ", re.sub(r'[^A-Za-z\s\d]+', '', from_unit)).strip())
-    to_unit = singularize(re.sub(r"\s+", " ", re.sub(r'[^A-Za-z\s\d]+', '', to_unit)).strip())
+    from_unit = singularize(re.sub(r"\s+", " ", re.sub(r'[^A-Za-z\s\d]+', '', from_unit)).strip()).lower()
+    to_unit = singularize(re.sub(r"\s+", " ", re.sub(r'[^A-Za-z\s\d]+', '', to_unit)).strip()).lower()
     # Check if units can be converted
-    # import ipdb
-    # ipdb.set_trace()
     try:
         from_unit, to_unit, ingredient_density = can_convert(from_unit, to_unit, ingredient, ingredient_density)
     except ConversionFailure as e:
@@ -198,7 +194,6 @@ def units_convertor(
 
     for response in responses:
         if response:
-            print(response)
             return response
 
     # Return a default response if no conversions found

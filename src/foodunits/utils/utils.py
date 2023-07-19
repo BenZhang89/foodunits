@@ -146,7 +146,7 @@ def preprocess(input_string: str) -> str:
     processed_value = re.sub(r'(?<!\d)[^\w\s](?!\d)', '', input_string)
     # Remove spaces between float like digits, e.g. 1. 1, 1, 1
     processed_value = re.sub(r'(?<=\d[.,:%])\s(?=\d)', '', processed_value)
-    processed_value = re.sub(r"\s+", " ", processed_value).strip()
+    processed_value = re.sub(r"\s+", " ", processed_value).strip().lower()
 
     return processed_value
 
@@ -191,9 +191,14 @@ def process_saved_units(units: List = None):
         A set of processed units.
     """
     # Extract and process all the saved units
+    units_processed = set()
     extracted_unit = [(unit['name'], unit['si']) for sub in units for unit in sub['units']]
     extracted_unit = [item for sublist in extracted_unit for item in sublist]
-    units_processed = set([singularize(unit.lower().replace(" ", "")) for unit in extracted_unit if unit])
+    for unit in extracted_unit:
+        if unit:
+            unit_lower = unit.lower().replace(" ", "")
+            units_processed.add(singularize(unit_lower))
+            units_processed.add(unit_lower)
     return units_processed
 
 def get_ingredient_density(ingredient, ingredient_dict:dict=None, threshold:int=85):
@@ -240,7 +245,6 @@ def get_ingredient_density(ingredient, ingredient_dict:dict=None, threshold:int=
     if best_score <= threshold:
         return None
     else:
-        print(best_match, ":", best_score)
         logging.info(
             f"""
             Find key-value pair {best_match}-{ingredient_dict[best_match]} for input ingredient {ingredient}.

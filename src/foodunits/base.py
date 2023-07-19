@@ -91,8 +91,6 @@ class FoodUnitConvertor:
         """
         if not self.units_from in self.physical_container_unit and not self.units_to in self.physical_container_unit:
             return False
-        # import ipdb
-        # ipdb.set_trace()
         #TODO Add converstion from cup to teaspoon/tablespoon etc.
         if self.units_from in self.physical_container_unit and self.units_to in self.physical_container_unit:
             raise ConversionFailure(

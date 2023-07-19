@@ -9,6 +9,8 @@ from foodunits.exceptions import ValidationFailure
     [
         ("cup",),
         ("ounces",),
+        ("Fluid Ounce",),
+        ("slices",),
         ("2 mls",),
         ("2mls",),
         ("2 fl ozs",),
