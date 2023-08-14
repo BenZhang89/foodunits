@@ -1044,7 +1044,7 @@ version = "2.2.0"
 description = "Python interface to MySQL"
 category = "main"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 
 [[package]]
 name = "myst-nb"
